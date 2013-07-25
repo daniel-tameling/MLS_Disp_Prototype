@@ -1,0 +1,42 @@
+echo            both
+units           lj
+atom_style      atomic
+
+lattice         fcc 0.8442
+region          box block 0 11.01 0 11.01 -22.02 22.02 units box
+region          box2 block 0 11.01 0 11.01 -88.08 88.08 units box
+create_box      1 box2
+create_atoms    1 random 4000 87287 box
+mass            1 1.0
+
+velocity        all create 0.7 87287
+
+pair_style      soft 1.0
+pair_coeff      1 1 10.0
+minimize        1.0e-4 1.0e-6 2500 1000
+
+pair_style      lj/long/coul/long long off 6
+pair_coeff      1 1 1.0 1.0 
+kspace_style    ewald/disp 1e-12
+
+minimize        1.0e-4 1.0e-6 2500 1000
+
+fix             nhvt all nvt temp 0.7 0.7 10
+
+thermo          100
+fix             rcent all recenter NULL NULL 0.5 units fraction
+
+dump            output all custom 1 test4000atoms.input id type x y z vx vy vz fx fy fz
+dump_modify     output format "%d %d %.16e %.16e %.16e %.16e %.16e %.16e %.16e %.16e %.16e"
+
+run             0
+
+variable        Epot equal pe
+variable        Epair equal epair
+variable        Ekin equal ke
+
+print           "absolute potential energy = ${Epot}"
+print           "pair energy = ${Epair}"
+print           "absolute kinetic energy = ${Ekin}"
+
+write_restart   e0.rs
